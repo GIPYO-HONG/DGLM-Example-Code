@@ -9,8 +9,8 @@ My = N;
 xl = 0; xr = 1;
 yl = 0; yr = 1;
 
-tau_int = 2;
-tau_bnd = 2;
+tau_int = 1/h^2;
+tau_bnd = 1/h^2;
 
 %% PDE: -Delta u = f, u = g on boundary
 f_func = @(x,y) 2*pi^2*sin(pi*x).*sin(pi*y);
