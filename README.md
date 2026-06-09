@@ -1,97 +1,89 @@
 # DGLM Example Code
 
-This repository provides a simple MATLAB implementation of the **Discontinuous Galerkin method with Lagrange Multipliers (DGLM)** for the Poisson equation with non-homogeneous Dirichlet boundary conditions.
+This repository contains a simple MATLAB implementation of the **Discontinuous Galerkin method with Lagrange Multipliers (DGLM)** for the Poisson equation with non-homogeneous Dirichlet boundary conditions.
+
+The purpose of this repository is to provide a **minimal educational example** of DGLM rather than a complete solver. Only a simple P1 triangular discretization on a uniform mesh is considered.
+
+---
 
 ## Problem Description
 
-We solve the Poisson equation
+We solve
 
-\[
--\Delta u = f \qquad \text{in } \Omega,
-\]
+$$
+-\Delta u = f
+\qquad \text{in } \Omega,
+$$
 
 with Dirichlet boundary conditions
 
-\[
-u = g \qquad \text{on } \partial\Omega,
-\]
+$$
+u = g
+\qquad \text{on } \partial \Omega,
+$$
 
-on the unit square domain
+on the unit square
 
-\[
+$$
 \Omega=(0,1)^2.
-\]
+$$
 
-In the current example, the source term is chosen as
+In the provided example,
 
-\[
+$$
 f(x,y)=2\pi^2\sin(\pi x)\sin(\pi y),
-\]
+$$
 
-and the boundary condition is prescribed by
+and
 
-\[
+$$
 g(x,y)=
 \begin{cases}
 \sin(x), & y=0,\\
 \sin(y), & x=0,\\
 0, & x=1 \text{ or } y=1.
 \end{cases}
-\]
+$$
 
-The Dirichlet boundary condition is imposed through a Lagrange multiplier defined on mesh edges.
-
----
-
-## DGLM Formulation
-
-The solution is approximated using **discontinuous P1 finite elements**, meaning that the numerical solution is allowed to be discontinuous across element interfaces.
-
-To weakly enforce continuity and boundary conditions, an additional unknown (the Lagrange multiplier \(\lambda\)) is introduced on element edges.
-
-The resulting global system has the block structure
-
-\[
-\begin{bmatrix}
-A & -B \\
-C & 2D
-\end{bmatrix}
-\begin{bmatrix}
-U \\
-\Lambda
-\end{bmatrix}
-=
-\begin{bmatrix}
-R \\
-0
-\end{bmatrix},
-\]
-
-where
-
-- \(U\) denotes the element-wise discontinuous solution,
-- \(\Lambda\) denotes the edge-based Lagrange multiplier.
+The Dirichlet boundary condition is imposed through edge-based Lagrange multiplier unknowns.
 
 ---
 
 ## Stabilization Parameter
 
-The parameter \(\tau\) controls the stabilization of the DGLM formulation.
+The stabilization parameter `tau` controls the coupling between neighboring elements.
 
-- Larger values of \(\tau\) impose stronger coupling across interfaces.
-- Smaller values lead to weaker stabilization and may affect robustness.
-- Proper choices of \(\tau\) can improve stability and accuracy.
+In this example,
 
-The implementation allows different stabilization parameters for
+```matlab
+h = 1/N;
 
-- interior edges (`tau_int`)
-- boundary edges (`tau_bnd`)
+tau_int = 1/h^2;
+tau_bnd = 1/h^2;
+```
+
+where
+
+- `tau_int` is used on interior edges,
+- `tau_bnd` is used on boundary edges.
+
+The choice
+
+```matlab
+tau = 1/h^2
+```
+
+was found experimentally to provide a good balance between continuity and conditioning of the linear system. For the test problem considered here, this choice produced relatively small jumps across element interfaces while avoiding unnecessarily large condition numbers.
+
+Although larger values of `tau` generally enforce stronger coupling between neighboring elements, they may also increase the condition number of the system matrix. For this reason, `tau = 1/h^2` was adopted as a reasonable practical choice in this example.
+
+For different source terms, boundary conditions, or meshes, users are encouraged to experiment with different values of `tau` and determine suitable choices for their particular problems.
 
 ---
 
 ## Usage
 
-All simulation parameters can be modified directly in `main.m`.
+All parameters can be modified directly in `main.m`.
 
 ### Mesh Resolution
 
@@ -102,23 +94,18 @@ Mx = N;
 My = N;
 ```
 
-This generates a uniform triangular mesh on the unit square.
+Increasing `N` generates a finer mesh.
 
-Increasing `N` produces a finer mesh and generally improves the approximation quality.
-
-### Stabilization Parameters
+### Stabilization Parameter
 
 ```matlab
-tau_int = 2;
-tau_bnd = 2;
+h = 1/N;
+
+tau_int = 1/h^2;
+tau_bnd = 1/h^2;
 ```
 
-- `tau_int` : stabilization parameter for interior edges.
-- `tau_bnd` : stabilization parameter for boundary edges.
-
 ### Run
-
-Execute
 
 ```matlab
 main
@@ -126,10 +113,10 @@ main
 
 The code will
 
-1. Generate the mesh.
+1. Generate a triangular mesh.
 2. Assemble the DGLM system.
-3. Impose Dirichlet boundary conditions.
-4. Solve the resulting linear system.
+3. Apply Dirichlet boundary conditions.
+4. Solve the linear system.
 5. Visualize the discontinuous solution.
 
 ---
@@ -149,11 +136,12 @@ plot_dglm_solution.m        Solution visualization
 
 ## Notes
 
-This code is intended as a minimal educational example demonstrating
+This repository is intended as a compact example demonstrating
 
-- Discontinuous Galerkin discretization,
-- Lagrange multiplier enforcement of boundary conditions,
-- Edge-based hybrid unknowns,
-- Stabilization through the parameter \(\tau\),
+- Poisson equation discretization,
+- discontinuous P1 finite elements,
+- edge-based Lagrange multipliers,
+- stabilization through `tau`,
+- and basic solution visualization.
 
-for the Poisson equation on triangular meshes.
+Users are encouraged to modify the source term `f`, boundary condition `g`, mesh resolution, and stabilization parameters to explore the behavior of the DGLM method.
